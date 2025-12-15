@@ -10,7 +10,8 @@
     <Grid Margin="20,10">
         <mdxaml:MarkdownScrollViewer x:Name="MarkdownViewer"
                                       Markdown=""
-                                      VerticalScrollBarVisibility="Auto">
+                                      VerticalScrollBarVisibility="Auto"
+                                      >
             <mdxaml:MarkdownScrollViewer.MarkdownStyle>
                 <Style TargetType="FlowDocument" BasedOn="{x:Static mdxaml:MarkdownStyle.Standard}">
                     <Setter Property="FontFamily" Value="Malgun Gothic, Segoe UI"/>

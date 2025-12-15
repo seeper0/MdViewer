@@ -145,9 +145,17 @@ HKEY_CURRENT_USER\Software\Classes\MdViewer.md\shell\open\command
 구현 방식: XAML Tag 트리거 + Document.Blocks 후처리
 
 ### 링크 클릭 이벤트
-MdXaml의 `MarkdownScrollViewer`에서 `CommandBindings` 또는 이벤트를 통해 링크 클릭 감지:
+마크다운 렌더링 후 FlowDocument 내 Hyperlink를 직접 찾아서 Click 이벤트 연결:
+- MdXaml의 `ClickAction` 사용하지 않음 (자체 처리 방지)
+- `CommandParameter`에서 URL 추출
 - `.md` 확장자 → WindowManager를 통해 새 창 열기
 - `http://`, `https://` → 기본 브라우저로 열기
+
+### 창 생성 및 파일 로드 순서
+1. `new MainWindow(filePath)` → 창 생성만
+2. `window.Show()` → 창 표시
+3. `Loaded` 이벤트 → `LoadFile()` 호출
+4. 파일 없으면 → MessageBox (새 창이 owner) → `Close()`
 
 ## 예외 처리
 - 파일 없음: 오류 메시지 표시 후 창 닫기

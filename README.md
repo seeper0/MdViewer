@@ -79,7 +79,7 @@ The application automatically saves and restores:
 - These settings persist between sessions in `%AppData%/MdViewer/settings.json`
 
 ### File Management
-- Each `.md` file can have multiple windows open
+- Each `.md` file opens in a single window (duplicates prevented)
 - Opening the same file twice focuses the existing window
 - Different files each open in new windows
 - Inter-process communication uses Named Pipes (MdViewer_Pipe)

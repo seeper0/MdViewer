@@ -17,53 +17,13 @@ namespace MdViewer
             InitializeComponent();
             LoadWindowSettings();
             Closing += MainWindow_Closing;
-
-            // 링크 클릭 이벤트 핸들링
-            CommandBindings.Add(new CommandBinding(
-                NavigationCommands.GoToPage,
-                OnNavigate));
-
-            // 마크다운 렌더링 후 코드 블록 폰트 적용
-            MarkdownViewer.Loaded += (s, e) => ApplyCodeBlockFont();
-        }
-
-        private void ApplyCodeBlockFont()
-        {
-            if (MarkdownViewer.Document == null) return;
-
-            var codeFont = new System.Windows.Media.FontFamily("D2Coding, GulimChe, DotumChe, Consolas, Courier New");
-
-            foreach (var block in MarkdownViewer.Document.Blocks)
-            {
-                ApplyFontToCodeBlocks(block, codeFont);
-            }
-        }
-
-        private void ApplyFontToCodeBlocks(System.Windows.Documents.Block block, System.Windows.Media.FontFamily codeFont)
-        {
-            if (block.Tag?.ToString() == "CodeBlock")
-            {
-                block.FontFamily = codeFont;
-                block.FontSize = 13;
-            }
-
-            if (block is Section section)
-            {
-                if (section.Tag?.ToString() == "CodeBlock")
-                {
-                    section.FontFamily = codeFont;
-                    section.FontSize = 13;
-                }
-                foreach (var child in section.Blocks)
-                {
-                    ApplyFontToCodeBlocks(child, codeFont);
-                }
-            }
         }
 
         public MainWindow(string filePath) : this()
         {
-            LoadFile(filePath);
+            // Show() 후 Loaded 이벤트에서 파일 로드
+            var path = filePath;
+            Loaded += (s, e) => LoadFile(path);
         }
 
         public string? FilePath => _filePath;
@@ -100,7 +60,7 @@ namespace MdViewer
 
             if (!File.Exists(_filePath))
             {
-                MessageBox.Show($"파일을 찾을 수 없습니다:\n{_filePath}", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(this, $"파일을 찾을 수 없습니다:\n{_filePath}", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
                 Close();
                 return;
             }
@@ -110,7 +70,13 @@ namespace MdViewer
                 var content = File.ReadAllText(_filePath);
                 MarkdownViewer.Markdown = content;
                 Title = $"{Path.GetFileName(_filePath)} - MdViewer";
-                ApplyCodeBlockFont();
+
+                // 렌더링 완료 후 처리
+                Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Loaded, () =>
+                {
+                    ApplyCodeBlockFont();
+                    SetupHyperlinks();
+                });
             }
             catch (Exception ex)
             {
@@ -126,12 +92,121 @@ namespace MdViewer
             }
         }
 
-        private void OnNavigate(object sender, ExecutedRoutedEventArgs e)
+        private void ApplyCodeBlockFont()
         {
-            if (e.Parameter is not string uri)
-                return;
+            if (MarkdownViewer.Document == null) return;
 
-            // 외부 링크 (http/https)
+            var codeFont = new System.Windows.Media.FontFamily("D2Coding, GulimChe, DotumChe, Consolas, Courier New");
+
+            foreach (var block in MarkdownViewer.Document.Blocks)
+            {
+                ApplyFontToCodeBlocks(block, codeFont);
+            }
+        }
+
+        private void ApplyFontToCodeBlocks(Block block, System.Windows.Media.FontFamily codeFont)
+        {
+            if (block.Tag?.ToString() == "CodeBlock")
+            {
+                block.FontFamily = codeFont;
+                block.FontSize = 13;
+            }
+
+            if (block is Section section)
+            {
+                if (section.Tag?.ToString() == "CodeBlock")
+                {
+                    section.FontFamily = codeFont;
+                    section.FontSize = 13;
+                }
+                foreach (var child in section.Blocks)
+                {
+                    ApplyFontToCodeBlocks(child, codeFont);
+                }
+            }
+        }
+
+        private void SetupHyperlinks()
+        {
+            if (MarkdownViewer.Document == null) return;
+
+            foreach (var block in MarkdownViewer.Document.Blocks)
+            {
+                SetupHyperlinksInBlock(block);
+            }
+        }
+
+        private void SetupHyperlinksInBlock(Block block)
+        {
+            if (block is Paragraph paragraph)
+            {
+                foreach (var inline in paragraph.Inlines)
+                {
+                    SetupHyperlinksInInline(inline);
+                }
+            }
+            else if (block is Section section)
+            {
+                foreach (var child in section.Blocks)
+                {
+                    SetupHyperlinksInBlock(child);
+                }
+            }
+            else if (block is List list)
+            {
+                foreach (var item in list.ListItems)
+                {
+                    foreach (var child in item.Blocks)
+                    {
+                        SetupHyperlinksInBlock(child);
+                    }
+                }
+            }
+            else if (block is Table table)
+            {
+                foreach (var rowGroup in table.RowGroups)
+                {
+                    foreach (var row in rowGroup.Rows)
+                    {
+                        foreach (var cell in row.Cells)
+                        {
+                            foreach (var child in cell.Blocks)
+                            {
+                                SetupHyperlinksInBlock(child);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        private void SetupHyperlinksInInline(Inline inline)
+        {
+            if (inline is Hyperlink hyperlink)
+            {
+                // MdXaml이 CommandParameter에 URL을 저장함
+                var uri = hyperlink.CommandParameter?.ToString()
+                          ?? hyperlink.NavigateUri?.ToString();
+
+                if (!string.IsNullOrEmpty(uri))
+                {
+                    // 기존 Command 제거하고 Click 이벤트로 처리
+                    hyperlink.Command = null;
+                    hyperlink.Click += (s, e) => OnHyperlinkClick(uri);
+                }
+            }
+            else if (inline is Span span)
+            {
+                foreach (var child in span.Inlines)
+                {
+                    SetupHyperlinksInInline(child);
+                }
+            }
+        }
+
+        private void OnHyperlinkClick(string uri)
+        {
+            // http/https 링크
             if (uri.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
                 uri.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
             {
@@ -139,26 +214,24 @@ namespace MdViewer
                 return;
             }
 
-            // 내부 링크 (.md 파일)
-            var targetPath = ResolveRelativePath(uri);
-
-            if (targetPath != null && targetPath.EndsWith(".md", StringComparison.OrdinalIgnoreCase))
+            // .md 파일 링크
+            if (uri.EndsWith(".md", StringComparison.OrdinalIgnoreCase))
             {
+                var targetPath = ResolveRelativePath(uri);
                 WindowManager.OpenFile(targetPath);
             }
         }
 
-        private string? ResolveRelativePath(string relativePath)
+        private string ResolveRelativePath(string relativePath)
         {
             if (string.IsNullOrEmpty(_filePath))
-                return null;
+                return relativePath;
 
             var baseDir = Path.GetDirectoryName(_filePath);
             if (baseDir == null)
-                return null;
+                return relativePath;
 
-            var fullPath = Path.GetFullPath(Path.Combine(baseDir, relativePath));
-            return File.Exists(fullPath) ? fullPath : null;
+            return Path.GetFullPath(Path.Combine(baseDir, relativePath));
         }
 
         private void Window_KeyDown(object sender, KeyEventArgs e)
