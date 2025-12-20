@@ -6,7 +6,10 @@
         xmlns:mdxaml="clr-namespace:MdXaml;assembly=MdXaml"
         mc:Ignorable="d"
         Title="MdViewer" Height="600" Width="900"
-        KeyDown="Window_KeyDown">
+        KeyDown="Window_KeyDown"
+        AllowDrop="True"
+        PreviewDrop="Window_Drop"
+        PreviewDragOver="Window_DragOver">
     <Grid Margin="20,10">
         <mdxaml:MarkdownScrollViewer x:Name="MarkdownViewer"
                                       Markdown=""
