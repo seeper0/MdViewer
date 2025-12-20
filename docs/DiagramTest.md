@@ -19,7 +19,9 @@ MdViewer/
 └── docs/
     ├── MdViewer.md
     ├── TaskPlan.md
+    ├── HeadingTest.md
     ├── LinkTest.md
+    ├── TableTest.md
     └── DiagramTest.md
 ```
 
