@@ -61,6 +61,7 @@ namespace MdViewer
             }
         }
 
+
         public MainWindow(string filePath) : this()
         {
             LoadFile(filePath);
@@ -139,13 +140,47 @@ namespace MdViewer
                 return;
             }
 
+            // 이미지 링크 - 파일 존재 여부 상관없이 Windows에 넘김
+            string[] imageExtensions = { ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp", ".svg", ".ico" };
+            var extension = Path.GetExtension(uri).ToLowerInvariant();
+
+            if (imageExtensions.Contains(extension))
+            {
+                var imagePath = ResolvePathWithoutExistenceCheck(uri);
+                if (imagePath != null)
+                {
+                    try
+                    {
+                        Process.Start(new ProcessStartInfo(imagePath) { UseShellExecute = true });
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"이미지를 열 수 없습니다:\n{ex.Message}", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
+                }
+                return;
+            }
+
             // 내부 링크 (.md 파일)
             var targetPath = ResolveRelativePath(uri);
 
             if (targetPath != null && targetPath.EndsWith(".md", StringComparison.OrdinalIgnoreCase))
             {
                 WindowManager.OpenFile(targetPath);
+                return;
             }
+        }
+
+        private string? ResolvePathWithoutExistenceCheck(string relativePath)
+        {
+            if (string.IsNullOrEmpty(_filePath))
+                return null;
+
+            var baseDir = Path.GetDirectoryName(_filePath);
+            if (baseDir == null)
+                return null;
+
+            return Path.GetFullPath(Path.Combine(baseDir, relativePath));
         }
 
         private string? ResolveRelativePath(string relativePath)
@@ -171,6 +206,43 @@ namespace MdViewer
                 case Key.F5:
                     ReloadFile();
                     break;
+            }
+        }
+
+        private void Window_DragOver(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent(DataFormats.FileDrop))
+            {
+                var files = (string[])e.Data.GetData(DataFormats.FileDrop);
+                if (files != null && files.Length > 0 && files[0].EndsWith(".md", StringComparison.OrdinalIgnoreCase))
+                {
+                    e.Effects = DragDropEffects.Copy;
+                }
+                else
+                {
+                    e.Effects = DragDropEffects.None;
+                }
+            }
+            else
+            {
+                e.Effects = DragDropEffects.None;
+            }
+            e.Handled = true;
+        }
+
+        private void Window_Drop(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent(DataFormats.FileDrop))
+            {
+                var files = (string[])e.Data.GetData(DataFormats.FileDrop);
+                if (files != null && files.Length > 0)
+                {
+                    var filePath = files[0];
+                    if (filePath.EndsWith(".md", StringComparison.OrdinalIgnoreCase))
+                    {
+                        LoadFile(filePath);
+                    }
+                }
             }
         }
     }
