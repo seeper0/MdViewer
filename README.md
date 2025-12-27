@@ -66,7 +66,7 @@ dotnet build -c Release
 # 애플리케이션 실행
 dotnet run
 
-# 또는 독립 실행 파일 게시
+# 또는 프레임워크 종속 게시
 dotnet publish -c Release -o ./publish
 ```
 
@@ -241,8 +241,11 @@ dotnet build -c Release
 # 테스트 실행(추가 시)
 dotnet test
 
-# 독립 실행 파일 게시
-dotnet publish -c Release --self-contained -r win-x64 -o ./publish
+# 프레임워크 종속 게시 (실제 사용 중, 약 2MB)
+dotnet publish -c Release -o ./publish
+
+# 독립 실행형 게시 (참고용, 약 156MB)
+# dotnet publish -c Release --self-contained -r win-x64 -o ./publish-standalone
 ```
 
 ### NuGet 종속성
