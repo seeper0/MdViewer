@@ -42,8 +42,8 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
-; Runtime-dependent 버전 (1MB)
-Source: "D:\Project\MdViewer\MdViewer.exe"; DestDir: "{app}"; Flags: ignoreversion
+; Runtime-dependent 버전 - 모든 필수 파일 포함
+Source: "D:\Project\MdViewer\publish\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
 Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
