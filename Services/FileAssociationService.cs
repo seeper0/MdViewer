@@ -12,11 +12,27 @@ namespace MdViewer.Services
         {
             try
             {
-                using var key = Registry.CurrentUser.OpenSubKey($@"Software\Classes\{Extension}");
-                if (key == null) return false;
+                // .md 확장자가 MdViewer.md와 연결되어 있는지 확인
+                using var extKey = Registry.CurrentUser.OpenSubKey($@"Software\Classes\{Extension}");
+                if (extKey == null) return false;
 
-                var value = key.GetValue("") as string;
-                return value == ProgId;
+                var progIdValue = extKey.GetValue("") as string;
+                if (progIdValue != ProgId) return false;
+
+                // 등록된 실행 파일 경로가 현재 실행 중인 경로와 일치하는지 확인
+                using var cmdKey = Registry.CurrentUser.OpenSubKey($@"Software\Classes\{ProgId}\shell\open\command");
+                if (cmdKey == null) return false;
+
+                var registeredCommand = cmdKey.GetValue("") as string;
+                var currentExePath = Environment.ProcessPath;
+
+                if (string.IsNullOrEmpty(registeredCommand) || string.IsNullOrEmpty(currentExePath))
+                    return false;
+
+                // 등록된 명령에서 실행 파일 경로 추출 ("경로" "%1" 형식)
+                var registeredExePath = registeredCommand.Split('"')[1];
+
+                return string.Equals(registeredExePath, currentExePath, StringComparison.OrdinalIgnoreCase);
             }
             catch
             {
