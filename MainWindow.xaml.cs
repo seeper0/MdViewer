@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Documents;
 using System.Windows.Input;
@@ -215,13 +216,24 @@ namespace MdViewer
                 return;
             }
 
+            // # 기호로 파일 경로와 시트 정보 분리 (Excel 표준 형식)
+            string filePath = uri;
+            string? sheetInfo = null;
+            if (uri.Contains('#'))
+            {
+                var parts = uri.Split('#', 2);
+                filePath = parts[0];
+                sheetInfo = parts.Length > 1 ? parts[1] : null;
+            }
+
+            var extension = Path.GetExtension(filePath).ToLowerInvariant();
+
             // 이미지 링크 - 파일 존재 여부 상관없이 Windows에 넘김
             string[] imageExtensions = { ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp", ".svg", ".ico" };
-            var extension = Path.GetExtension(uri).ToLowerInvariant();
 
             if (imageExtensions.Contains(extension))
             {
-                var imagePath = ResolvePathWithoutExistenceCheck(uri);
+                var imagePath = ResolvePathWithoutExistenceCheck(filePath);
                 if (imagePath != null)
                 {
                     try
@@ -231,6 +243,55 @@ namespace MdViewer
                     catch (Exception ex)
                     {
                         MessageBox.Show($"이미지를 열 수 없습니다:\n{ex.Message}", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
+                }
+                return;
+            }
+
+            // Excel 파일 링크 - 시트 정보가 있으면 COM Interop 사용
+            string[] excelExtensions = { ".xls", ".xlsx" };
+
+            if (excelExtensions.Contains(extension))
+            {
+                var excelPath = ResolvePathWithoutExistenceCheck(filePath);
+                if (excelPath != null)
+                {
+                    if (sheetInfo != null)
+                    {
+                        // COM Interop으로 특정 시트 열기
+                        OpenExcelWithSheet(excelPath, sheetInfo);
+                    }
+                    else
+                    {
+                        // 시트 정보 없으면 기존 방식
+                        try
+                        {
+                            Process.Start(new ProcessStartInfo(excelPath) { UseShellExecute = true });
+                        }
+                        catch (Exception ex)
+                        {
+                            MessageBox.Show($"Excel 파일을 열 수 없습니다:\n{ex.Message}", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
+                        }
+                    }
+                }
+                return;
+            }
+
+            // 기타 Office 파일 링크 (Word, PowerPoint)
+            string[] otherOfficeExtensions = { ".doc", ".docx", ".ppt", ".pptx" };
+
+            if (otherOfficeExtensions.Contains(extension))
+            {
+                var officePath = ResolvePathWithoutExistenceCheck(filePath);
+                if (officePath != null)
+                {
+                    try
+                    {
+                        Process.Start(new ProcessStartInfo(officePath) { UseShellExecute = true });
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"Office 파일을 열 수 없습니다:\n{ex.Message}", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
                     }
                 }
                 return;
@@ -317,6 +378,86 @@ namespace MdViewer
                     }
                 }
             }
+        }
+
+        private void OpenExcelWithSheet(string excelPath, string sheetInfo)
+        {
+            dynamic? excelApp = null;
+            dynamic? workbook = null;
+
+            try
+            {
+                // 시트 정보 파싱: '시트이름!셀주소' 형식
+                string sheetName = sheetInfo;
+                string? cellAddress = null;
+
+                if (sheetInfo.Contains('!'))
+                {
+                    var parts = sheetInfo.Split('!', 2);
+                    sheetName = parts[0];
+                    cellAddress = parts.Length > 1 ? parts[1] : null;
+                }
+
+                // 시트 이름에서 작은따옴표 제거 (있을 경우)
+                sheetName = sheetName.Trim('\'');
+
+                // Excel 애플리케이션 시작 (dynamic COM 바인딩)
+                Type? excelType = Type.GetTypeFromProgID("Excel.Application");
+                if (excelType == null)
+                {
+                    MessageBox.Show("Excel이 설치되어 있지 않습니다.", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+
+                excelApp = Activator.CreateInstance(excelType);
+                excelApp.Visible = true;
+
+                // 워크북 열기
+                workbook = excelApp.Workbooks.Open(excelPath);
+
+                // 시트 활성화
+                try
+                {
+                    dynamic worksheet = workbook.Sheets[sheetName];
+                    worksheet.Activate();
+
+                    // 셀 주소가 지정되어 있으면 해당 셀로 이동
+                    if (!string.IsNullOrEmpty(cellAddress))
+                    {
+                        try
+                        {
+                            dynamic range = worksheet.Range[cellAddress];
+                            range.Select();
+                        }
+                        catch
+                        {
+                            // 셀 주소가 잘못되어도 시트는 열림
+                        }
+                    }
+                }
+                catch
+                {
+                    // 시트 이름이 잘못되어도 파일은 열림
+                    MessageBox.Show($"시트를 찾을 수 없습니다: {sheetName}\n파일은 열렸습니다.", "알림", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Excel 파일을 열 수 없습니다:\n{ex.Message}", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
+
+                // 오류 발생 시 COM 객체 정리
+                if (workbook != null)
+                {
+                    workbook.Close(false);
+                    Marshal.ReleaseComObject(workbook);
+                }
+                if (excelApp != null)
+                {
+                    excelApp.Quit();
+                    Marshal.ReleaseComObject(excelApp);
+                }
+            }
+            // 성공 시에는 COM 객체를 유지 (Excel이 계속 실행되어야 함)
         }
     }
 }

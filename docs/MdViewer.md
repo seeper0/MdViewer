@@ -34,6 +34,30 @@
 - 시스템 기본 브라우저로 열기
 - `Process.Start(new ProcessStartInfo(url) { UseShellExecute = true })`
 
+#### 이미지 링크
+- 지원 확장자: `.jpg`, `.jpeg`, `.png`, `.gif`, `.bmp`, `.webp`, `.svg`, `.ico`
+- 클릭 시 시스템 기본 이미지 뷰어로 열기
+- 상대 경로 지원
+
+#### Office 파일 링크
+**지원 파일:**
+- Excel: `.xls`, `.xlsx`
+- Word: `.doc`, `.docx`
+- PowerPoint: `.ppt`, `.pptx`
+
+**Excel 시트 이동 기능:**
+- 표준 형식: `파일.xlsx#시트이름!셀주소`
+  - 예: `data.xlsx#Sheet2!A1`
+  - 예: `report.xlsx#'월간 보고서'!B5`
+- `#` 기호가 있으면 Dynamic COM 바인딩으로 특정 시트/셀 열기
+- `#` 기호가 없으면 기본 방식으로 파일만 열기
+- 시트 이름에 공백/특수문자가 있으면 작은따옴표로 감싸기
+- Excel이 설치되어 있어야 함 (Interop DLL 의존성 없음)
+
+**기타 Office 파일:**
+- Word, PowerPoint는 기본 방식으로 열기
+- 시스템에 설치된 Office 프로그램 자동 실행
+
 ### 5. 창 상태 저장
 - 창 크기(Width, Height) 저장
 - 창 위치(Left, Top) 저장
@@ -82,8 +106,10 @@ MdViewer/
 #### MainWindow.xaml.cs
 - MdXaml MarkdownScrollViewer 컨트롤 사용
 - 파일 로드 및 렌더링
-- 링크 클릭 이벤트 핸들링
+- 링크 클릭 이벤트 핸들링 (HTTP, 이미지, Office, MD)
+- Excel 시트 이동 기능 (Dynamic COM)
 - 단축키 바인딩
+- Drag & Drop 지원 (.md 파일)
 
 #### FileAssociationService.cs
 - 레지스트리에 .md 확장자 등록
@@ -148,8 +174,23 @@ HKEY_CURRENT_USER\Software\Classes\MdViewer.md\shell\open\command
 마크다운 렌더링 후 FlowDocument 내 Hyperlink를 직접 찾아서 Click 이벤트 연결:
 - MdXaml의 `ClickAction` 사용하지 않음 (자체 처리 방지)
 - `CommandParameter`에서 URL 추출
-- `.md` 확장자 → WindowManager를 통해 새 창 열기
-- `http://`, `https://` → 기본 브라우저로 열기
+
+**링크 처리 순서:**
+1. `http://`, `https://` → 기본 브라우저로 열기
+2. `#` 기호로 파일 경로와 시트 정보 분리 (Excel 표준 형식)
+3. 이미지 확장자 (`.jpg`, `.png` 등) → 기본 이미지 뷰어로 열기
+4. Excel 확장자 (`.xls`, `.xlsx`)
+   - `#` 있음 → `OpenExcelWithSheet()` 메서드로 특정 시트 열기
+   - `#` 없음 → 기본 방식으로 파일 열기
+5. 기타 Office 파일 (`.doc`, `.docx`, `.ppt`, `.pptx`) → 기본 방식으로 열기
+6. `.md` 확장자 → WindowManager를 통해 새 창 열기
+
+**OpenExcelWithSheet() 메서드:**
+- Dynamic COM 바인딩 사용 (`Type.GetTypeFromProgID("Excel.Application")`)
+- Excel 애플리케이션 생성 및 Visible = true 설정
+- 워크북 열기 → 시트 활성화 → 셀 선택
+- COM 객체는 성공 시 유지 (Excel이 계속 실행)
+- 실패 시 COM 객체 정리 (`Marshal.ReleaseComObject`)
 
 ### 창 생성 및 파일 로드 순서
 1. `new MainWindow(filePath)` → 창 생성만
