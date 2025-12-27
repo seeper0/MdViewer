@@ -421,6 +421,8 @@ FodyWeavers.xsd
 .claude/settings.local.json
 
 # MdViewer build outputs
+MdViewer.exe
 MdViewer-v*.exe
-publish-runtime-dependent/
+publish/
+publish-*/
 installer-output/
