@@ -155,11 +155,11 @@ cd publish && tar -a -c -f ../MdViewer-v새버전-portable.zip * && cd ..
 
 #### 7.5 인스톨러 테스트
 
-**중요**: Setup.exe를 직접 실행하여 설치 테스트를 진행합니다.
+**필수**: 인스톨러 생성 후 반드시 자동으로 실행하여 테스트합니다.
 
 ```bash
-# 인스톨러 실행 (GUI 설치 진행)
-./installer-output/MdViewer-v새버전-Setup.exe
+# 인스톨러 자동 실행 (필수 - 빼먹지 말 것!)
+start installer-output/MdViewer-v새버전-Setup.exe
 ```
 
 **테스트 체크리스트**:

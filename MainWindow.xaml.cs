@@ -1,9 +1,11 @@
 using System.Diagnostics;
 using System.IO;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Documents;
 using System.Windows.Input;
+using System.Windows.Interop;
 using MdViewer.Models;
 using MdViewer.Services;
 
@@ -11,6 +13,18 @@ namespace MdViewer
 {
     public partial class MainWindow : Window
     {
+        // Win32 API for system menu
+        [DllImport("user32.dll")]
+        private static extern IntPtr GetSystemMenu(IntPtr hWnd, bool bRevert);
+
+        [DllImport("user32.dll")]
+        private static extern bool AppendMenu(IntPtr hMenu, int uFlags, int uIDNewItem, string lpNewItem);
+
+        private const int MF_SEPARATOR = 0x800;
+        private const int MF_STRING = 0x0;
+        private const int WM_SYSCOMMAND = 0x112;
+        private const int ABOUT_MENU_ID = 1000;
+
         private string? _filePath;
 
         public MainWindow()
@@ -18,6 +32,7 @@ namespace MdViewer
             InitializeComponent();
             LoadWindowSettings();
             Closing += MainWindow_Closing;
+            SourceInitialized += MainWindow_SourceInitialized;
         }
 
 
@@ -360,6 +375,10 @@ namespace MdViewer
                 case Key.F5:
                     ReloadFile();
                     break;
+                case Key.F1:
+                    ShowAbout();
+                    e.Handled = true;
+                    break;
             }
         }
 
@@ -452,6 +471,11 @@ namespace MdViewer
                 }
 
                 excelApp = Activator.CreateInstance(excelType);
+                if (excelApp == null)
+                {
+                    MessageBox.Show("Excel 애플리케이션을 생성할 수 없습니다.", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
                 excelApp.Visible = true;
 
                 // 워크북 열기
@@ -500,6 +524,135 @@ namespace MdViewer
                 }
             }
             // 성공 시에는 COM 객체를 유지 (Excel이 계속 실행되어야 함)
+        }
+
+        private void MainWindow_SourceInitialized(object? sender, EventArgs e)
+        {
+            IntPtr hwnd = new WindowInteropHelper(this).Handle;
+            IntPtr sysMenu = GetSystemMenu(hwnd, false);
+
+            // 구분선 추가
+            AppendMenu(sysMenu, MF_SEPARATOR, 0, string.Empty);
+            // About 메뉴 추가 (닫기 바로 위)
+            AppendMenu(sysMenu, MF_STRING, ABOUT_MENU_ID, "MdViewer 정보(&A)");
+
+            // 메시지 후킹
+            HwndSource source = HwndSource.FromHwnd(hwnd);
+            source.AddHook(WndProc);
+        }
+
+        private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
+        {
+            if (msg == WM_SYSCOMMAND && wParam.ToInt32() == ABOUT_MENU_ID)
+            {
+                ShowAbout();
+                handled = true;
+            }
+            return IntPtr.Zero;
+        }
+
+        private void ShowAbout()
+        {
+            var version = Assembly.GetExecutingAssembly().GetName().Version;
+
+            var aboutWindow = new Window
+            {
+                Title = "MdViewer 정보",
+                Width = 400,
+                Height = 280,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                Owner = this,
+                ResizeMode = ResizeMode.NoResize,
+                WindowStyle = WindowStyle.ToolWindow
+            };
+
+            // ESC로 창 닫기
+            aboutWindow.KeyDown += (s, e) =>
+            {
+                if (e.Key == Key.Escape)
+                {
+                    aboutWindow.Close();
+                    e.Handled = true;
+                }
+            };
+
+            var stackPanel = new System.Windows.Controls.StackPanel
+            {
+                Margin = new Thickness(20)
+            };
+
+            // 버전 정보
+            stackPanel.Children.Add(new System.Windows.Controls.TextBlock
+            {
+                Text = $"MdViewer v{version?.ToString(3)}",
+                FontSize = 18,
+                FontWeight = FontWeights.Bold,
+                Margin = new Thickness(0, 0, 0, 10)
+            });
+
+            // 설명
+            stackPanel.Children.Add(new System.Windows.Controls.TextBlock
+            {
+                Text = "마크다운 파일 뷰어",
+                FontSize = 14,
+                Margin = new Thickness(0, 0, 0, 20)
+            });
+
+            // GitHub 링크 (클릭 가능)
+            var linkText = new System.Windows.Controls.TextBlock
+            {
+                FontSize = 14,
+                Margin = new Thickness(0, 0, 0, 20)
+            };
+            linkText.Inlines.Add(new System.Windows.Documents.Run("Home: "));
+            var hyperlink = new System.Windows.Documents.Hyperlink(new System.Windows.Documents.Run("https://github.com/seeper0/MdViewer"))
+            {
+                NavigateUri = new Uri("https://github.com/seeper0/MdViewer")
+            };
+            hyperlink.RequestNavigate += (s, e) =>
+            {
+                try
+                {
+                    Process.Start(new ProcessStartInfo
+                    {
+                        FileName = e.Uri.AbsoluteUri,
+                        UseShellExecute = true
+                    });
+                }
+                catch { }
+            };
+            linkText.Inlines.Add(hyperlink);
+            stackPanel.Children.Add(linkText);
+
+            // Copyright
+            stackPanel.Children.Add(new System.Windows.Controls.TextBlock
+            {
+                Text = "Copyright © 2025 seeper0",
+                FontSize = 12,
+                Foreground = System.Windows.Media.Brushes.Gray,
+                Margin = new Thickness(0, 0, 0, 20)
+            });
+
+            // 확인 버튼
+            var okButton = new System.Windows.Controls.Button
+            {
+                Content = "확인",
+                Width = 80,
+                Height = 30,
+                IsDefault = true
+            };
+            okButton.Click += (s, e) => aboutWindow.Close();
+
+            var buttonPanel = new System.Windows.Controls.StackPanel
+            {
+                Orientation = System.Windows.Controls.Orientation.Horizontal,
+                HorizontalAlignment = HorizontalAlignment.Center
+            };
+            buttonPanel.Children.Add(okButton);
+            stackPanel.Children.Add(buttonPanel);
+
+            aboutWindow.Content = stackPanel;
+            aboutWindow.ShowDialog();
         }
     }
 }

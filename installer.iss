@@ -38,21 +38,20 @@ ShowLanguageDialog=auto
 Name: "korean"; MessagesFile: "compiler:Languages\Korean.isl"
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
-[Tasks]
-Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
-
 [Files]
 ; Runtime-dependent 버전 - 모든 필수 파일 포함
 Source: "D:\Project\MdViewer\publish\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "D:\Project\MdViewer\README.md"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
 Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
+Name: "{group}\README"; Filename: "{app}\README.md"
+Name: "{group}\MdViewer 페이지"; Filename: "https://github.com/seeper0/MdViewer"
 Name: "{group}\{cm:UninstallProgram,{#MyAppName}}"; Filename: "{uninstallexe}"
-Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
 
 [Run]
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
-Filename: "https://github.com/seeper0/MdViewer"; Description: "GitHub 페이지 방문"; Flags: postinstall shellexec skipifsilent unchecked
+Filename: "https://github.com/seeper0/MdViewer"; Description: "MdViewer 페이지 방문"; Flags: postinstall shellexec skipifsilent
 
 [Registry]
 ; .md 파일 연결은 프로그램 첫 실행시 자동으로 처리됨
