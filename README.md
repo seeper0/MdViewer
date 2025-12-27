@@ -1,160 +1,177 @@
 # MdViewer
 
-A lightweight desktop application for viewing Markdown files with a clean, distraction-free interface.
+깔끔하고 방해 없는 인터페이스로 마크다운 파일을 보는 가벼운 데스크톱 애플리케이션입니다.
 
-## Overview
+## 개요
 
-**MdViewer** is a Windows desktop application built with WPF and .NET 8.0 that provides a dedicated viewer for Markdown (.md) files. It automatically associates itself with `.md` file extensions on first launch, allowing seamless viewing by double-clicking Markdown files in Windows Explorer.
+**MdViewer**는 WPF와 .NET 8.0으로 제작된 Windows 데스크톱 애플리케이션으로 마크다운(.md) 파일 전용 뷰어를 제공합니다. 첫 실행 시 `.md` 파일 확장자를 자동으로 연결하여 Windows 탐색기에서 마크다운 파일을 더블클릭하여 바로 볼 수 있습니다.
 
-## Features
+## 기능
 
-### Core Functionality
-- **Markdown Rendering**: Full support for standard Markdown syntax with beautiful formatting
-- **File Association**: Automatic registration of `.md` file extension on first run
-- **Multi-Window Support**: Open multiple Markdown files simultaneously
-- **Smart Window Management**: Opening the same file twice focuses the existing window instead of creating duplicates
-- **Internal Link Navigation**: Click links to other `.md` files to open them in new windows
-- **External Link Support**: Web links (http/https) open in your default browser
+### 핵심 기능
+- **마크다운 렌더링**: 아름다운 서식으로 표준 마크다운 문법을 완벽하게 지원
+- **파일 연결**: 첫 실행 시 `.md` 파일 확장자 자동 등록
+- **멀티 윈도우 지원**: 여러 마크다운 파일을 동시에 열기
+- **스마트 창 관리**: 같은 파일을 두 번 열면 중복 생성 대신 기존 창에 포커스
+- **내부 링크 탐색**: 다른 `.md` 파일 링크를 클릭하여 새 창에서 열기
+- **외부 링크 지원**: 웹 링크(http/https)는 기본 브라우저에서 열기
+- **이미지 링크**: 이미지 파일(jpg, png 등)을 기본 이미지 뷰어로 열기
+- **Office 파일 링크**: Excel, Word, PowerPoint 파일 열기 지원
+  - Excel 시트 이동: `파일.xlsx#시트이름!셀주소` 형식으로 특정 시트/셀로 바로 이동
 
-### UI & Typography
-- **Customized Styling**:
-  - Body text: 18px with Malgun Gothic/Segoe UI fonts
-  - Headings: H1-H6 with progressive sizing (28px - 18px)
-  - Code blocks: Fixed-width fonts (D2Coding, Consolas, etc.) at 13px
-- **Syntax Highlighting**: Code blocks displayed with distinct formatting
-- **Responsive Layout**: Window size and position are remembered across sessions
+### UI 및 타이포그래피
+- **맞춤형 스타일**:
+  - 본문: 18px, Malgun Gothic/Segoe UI 폰트
+  - 제목: H1-H6 점진적 크기 조정(28px - 18px)
+  - 코드 블록: 고정폭 폰트(D2Coding, Consolas 등) 13px
+- **구문 강조**: 코드 블록을 독특한 서식으로 표시
+- **반응형 레이아웃**: 창 크기와 위치를 세션 간에 기억
+- **Drag & Drop**: .md 파일을 창에 드래그하여 열기
 
-### Shortcuts
-| Shortcut | Action |
-|----------|--------|
-| **Esc** | Close window |
-| **F5** | Refresh current file |
-| **Alt+F4** | Close window (standard) |
+### 단축키
+| 단축키 | 동작 |
+|--------|------|
+| **Esc** | 창 닫기 |
+| **F5** | 현재 파일 새로고침 |
+| **Alt+F4** | 창 닫기 (기본) |
 
-## Tech Stack
+## 기술 스택
 
-- **Framework**: WPF (.NET 8.0 Windows)
-- **Markdown Engine**: [MdXaml](https://github.com/whistyun/MdXaml) 1.27.0
-- **Language**: C#
-- **Build System**: .NET CLI / Visual Studio
-- **Configuration**: JSON (stored in `%AppData%/MdViewer/settings.json`)
+- **프레임워크**: WPF (.NET 8.0 Windows)
+- **마크다운 엔진**: [MdXaml](https://github.com/whistyun/MdXaml) 1.27.0
+- **언어**: C#
+- **빌드 시스템**: .NET CLI / Visual Studio
+- **구성**: JSON (`%AppData%/MdViewer/settings.json`에 저장)
 
-## Installation
+## 설치
 
-### Prerequisites
-- Windows 7 or later
-- .NET 8.0 Runtime (if running pre-built executable)
-- Visual Studio 2022 or .NET 8.0 SDK (if building from source)
+### 필수 요구사항
+- Windows 7 이상
+- .NET 8.0 Runtime (미리 빌드된 실행 파일 실행 시)
+- Visual Studio 2022 또는 .NET 8.0 SDK (소스에서 빌드 시)
 
-### From Release
-Download the latest release executable and run it. File association will be registered on first launch.
+### 릴리즈에서 설치
+최신 릴리즈 실행 파일을 다운로드하고 실행하세요. 첫 실행 시 파일 연결이 등록됩니다.
 
-### Build from Source
+### 소스에서 빌드
 ```bash
-# Clone the repository
+# 저장소 복제
 git clone https://github.com/seeper0/MdViewer.git
 cd MdViewer
 
-# Build the project
+# 프로젝트 빌드
 dotnet build -c Release
 
-# Run the application
+# 애플리케이션 실행
 dotnet run
 
-# Or publish a standalone executable
+# 또는 독립 실행 파일 게시
 dotnet publish -c Release -o ./publish
 ```
 
-## Usage
+## 사용법
 
-### Opening Files
-- **From Explorer**: Double-click any `.md` file (after first launch)
-- **From Command Line**: `MdViewer.exe "path/to/file.md"`
-- **From Within App**: Click links to other `.md` files
+### 파일 열기
+- **탐색기에서**: `.md` 파일을 더블클릭 (첫 실행 후)
+- **명령줄에서**: `MdViewer.exe "경로/파일.md"`
+- **앱 내에서**: 다른 `.md` 파일 링크 클릭
+- **Drag & Drop**: .md 파일을 창에 드래그
 
-### Window State
-The application automatically saves and restores:
-- Window width and height
-- Window position on screen
-- These settings persist between sessions in `%AppData%/MdViewer/settings.json`
+### 링크 기능
+- **마크다운 링크**: 다른 .md 파일로 이동
+- **웹 링크**: http/https 링크는 기본 브라우저에서 열기
+- **이미지 링크**: .jpg, .png, .gif, .bmp, .webp, .svg, .ico 파일을 기본 이미지 뷰어로 열기
+- **Excel 링크**:
+  - 기본: `data.xlsx` → Excel로 파일 열기
+  - 시트 이동: `data.xlsx#Sheet2!A1` → Excel을 열고 Sheet2의 A1 셀로 이동
+- **Word/PowerPoint 링크**: .doc, .docx, .ppt, .pptx 파일 열기
 
-### File Management
-- Each `.md` file opens in a single window (duplicates prevented)
-- Opening the same file twice focuses the existing window
-- Different files each open in new windows
-- Inter-process communication uses Named Pipes (MdViewer_Pipe)
+### 창 상태
+애플리케이션이 자동으로 저장하고 복원하는 항목:
+- 창 너비와 높이
+- 화면의 창 위치
+- 이 설정은 `%AppData%/MdViewer/settings.json`에 세션 간 유지됩니다
 
-## Project Structure
+### 파일 관리
+- 각 `.md` 파일은 단일 창에서 열림(중복 방지)
+- 같은 파일을 두 번 열면 기존 창에 포커스
+- 다른 파일은 각각 새 창에서 열림
+- 프로세스 간 통신은 Named Pipes 사용(MdViewer_Pipe)
+
+## 프로젝트 구조
 
 ```
 MdViewer/
-├── App.xaml              # Application root (resources, styles)
-├── App.xaml.cs           # App startup, single-instance management, pipe server
-├── MainWindow.xaml       # Main viewer window UI
-├── MainWindow.xaml.cs    # Window logic, file loading, rendering, keyboard shortcuts
-├── AssemblyInfo.cs       # Assembly metadata
-├── MdViewer.csproj       # Project configuration
-├── MdViewer.sln          # Solution file
+├── App.xaml              # 애플리케이션 루트(리소스, 스타일)
+├── App.xaml.cs           # 앱 시작, 단일 인스턴스 관리, 파이프 서버
+├── MainWindow.xaml       # 메인 뷰어 창 UI
+├── MainWindow.xaml.cs    # 창 로직, 파일 로딩, 렌더링, 키보드 단축키
+├── AssemblyInfo.cs       # 어셈블리 메타데이터
+├── MdViewer.csproj       # 프로젝트 구성
+├── MdViewer.sln          # 솔루션 파일
 │
 ├── Models/
-│   └── AppSettings.cs    # Window state model (Width, Height, Left, Top)
+│   └── AppSettings.cs    # 창 상태 모델(Width, Height, Left, Top)
 │
 ├── Services/
-│   ├── FileAssociationService.cs  # Registry-based .md file association
-│   ├── PipeService.cs             # Named Pipe client/server communication
-│   ├── SettingsService.cs         # Settings persistence (JSON)
-│   └── WindowManager.cs           # Multi-window tracking and coordination
+│   ├── FileAssociationService.cs  # 레지스트리 기반 .md 파일 연결
+│   ├── PipeService.cs             # Named Pipe 클라이언트/서버 통신
+│   ├── SettingsService.cs         # 설정 저장(JSON)
+│   └── WindowManager.cs           # 멀티 윈도우 추적 및 조정
 │
 └── docs/
-    ├── MdViewer.md       # Complete specification document
-    ├── TaskPlan.md       # Implementation task checklist
-    ├── HeadingTest.md    # Test markdown files
+    ├── MdViewer.md       # 완전한 명세서 문서
+    ├── TaskPlan.md       # 구현 작업 체크리스트
+    ├── HeadingTest.md    # 테스트 마크다운 파일
     ├── LinkTest.md
+    ├── ImageLinkTest.md
     ├── TableTest.md
     └── DiagramTest.md
 ```
 
-## Architecture
+## 아키텍처
 
-### Key Components
+### 주요 구성 요소
 
 **App.xaml.cs**
-- Entry point for the application
-- Handles command-line arguments
-- Manages single-instance behavior via Named Pipes
-- Registers file association on first run
-- Creates and shows the first window
+- 애플리케이션 진입점
+- 명령줄 인수 처리
+- Named Pipes를 통한 단일 인스턴스 동작 관리
+- 첫 실행 시 파일 연결 등록
+- 첫 번째 창 생성 및 표시
 
 **MainWindow.xaml.cs**
-- Renders Markdown content using MdXaml's MarkdownScrollViewer
-- Loads `.md` files and applies custom styling
-- Handles keyboard shortcuts (Esc, F5)
-- Processes link clicks (internal `.md` and external web links)
-- Saves/restores window state through SettingsService
+- MdXaml의 MarkdownScrollViewer를 사용하여 마크다운 콘텐츠 렌더링
+- `.md` 파일 로드 및 맞춤 스타일 적용
+- 키보드 단축키 처리(Esc, F5)
+- 링크 클릭 처리(내부 `.md`, 외부 웹 링크, 이미지, Office 파일)
+- Excel 시트 이동 기능(Dynamic COM)
+- SettingsService를 통한 창 상태 저장/복원
+- Drag & Drop 지원
 
 **WindowManager.cs**
-- Maintains a registry of open files and their windows
-- Prevents duplicate windows for the same file
-- Routes new file requests to existing windows or creates new ones
+- 열린 파일과 해당 창의 레지스트리 유지
+- 동일 파일에 대한 중복 창 방지
+- 새 파일 요청을 기존 창으로 라우팅하거나 새 창 생성
 
 **PipeService.cs**
-- Named Pipe server: Listens for file open requests from new instances
-- Named Pipe client: Communicates with existing instance
-- Allows the app to act as a single-instance application with inter-process coordination
+- Named Pipe 서버: 새 인스턴스의 파일 열기 요청 수신
+- Named Pipe 클라이언트: 기존 인스턴스와 통신
+- 프로세스 간 조정을 통한 단일 인스턴스 애플리케이션 구현
 
 **FileAssociationService.cs**
-- Registers `.md` extension with Windows registry on first run
-- Uses HKEY_CURRENT_USER (no admin rights required)
-- Registry path: `Software\Classes\.md`
+- 첫 실행 시 Windows 레지스트리에 `.md` 확장자 등록
+- HKEY_CURRENT_USER 사용(관리자 권한 불필요)
+- 레지스트리 경로: `Software\Classes\.md`
 
 **SettingsService.cs**
-- Saves window state to JSON file
-- Location: `%AppData%/MdViewer/settings.json`
-- Loads and applies settings on application startup
+- 창 상태를 JSON 파일로 저장
+- 위치: `%AppData%/MdViewer/settings.json`
+- 애플리케이션 시작 시 설정 로드 및 적용
 
-## Configuration
+## 구성
 
-### Default Settings
+### 기본 설정
 ```json
 {
   "WindowWidth": 900.0,
@@ -164,11 +181,11 @@ MdViewer/
 }
 ```
 
-Settings are automatically saved when closing any window and restored on next launch.
+설정은 창을 닫을 때 자동으로 저장되고 다음 시작 시 복원됩니다.
 
-## Registry Integration
+## 레지스트리 통합
 
-On first run, the following registry entries are created:
+첫 실행 시 다음 레지스트리 항목이 생성됩니다:
 ```
 HKEY_CURRENT_USER\Software\Classes\.md
   (Default) = "MdViewer.md"
@@ -180,76 +197,76 @@ HKEY_CURRENT_USER\Software\Classes\MdViewer.md\shell\open\command
   (Default) = "C:\path\to\MdViewer.exe" "%1"
 ```
 
-No administrator privileges are required as changes are made to HKEY_CURRENT_USER.
+HKEY_CURRENT_USER에 변경사항이 적용되므로 관리자 권한이 필요하지 않습니다.
 
-## Error Handling
+## 오류 처리
 
-- **File Not Found**: Shows error message and closes the window
-- **File Read Error**: Displays error message with details
-- **Registry Error**: Displays warning but continues running normally
+- **파일 없음**: 오류 메시지 표시 후 창 닫기
+- **파일 읽기 오류**: 세부 정보와 함께 오류 메시지 표시
+- **레지스트리 오류**: 경고 표시하지만 정상적으로 계속 실행
 
-## Performance
+## 성능
 
-- **Lightweight**: Minimal memory footprint
-- **Fast Startup**: Instant window opening
-- **Smooth Rendering**: MdXaml provides efficient Markdown rendering
-- **Smart Font Selection**: Automatically uses available system fonts (fallback chain)
+- **경량**: 최소한의 메모리 사용
+- **빠른 시작**: 즉각적인 창 열림
+- **부드러운 렌더링**: MdXaml이 효율적인 마크다운 렌더링 제공
+- **스마트 폰트 선택**: 사용 가능한 시스템 폰트 자동 사용(폴백 체인)
 
-## Future Enhancement Ideas
+## 향후 개선 아이디어
 
-- Dark mode / theme switching
-- Font size adjustment (Ctrl+Mouse wheel)
-- File explorer sidebar for navigation
-- Print support
-- Bookmark/history management
-- Search/find functionality
-- Right-to-left text support
+- 다크 모드 / 테마 전환
+- 폰트 크기 조정(Ctrl+마우스 휠)
+- 탐색용 파일 탐색기 사이드바
+- 인쇄 지원
+- 북마크/히스토리 관리
+- 검색/찾기 기능
+- 오른쪽에서 왼쪽 텍스트 지원
 
-## Building & Development
+## 빌드 및 개발
 
-### Requirements
-- Visual Studio 2022 (or VS Code with C# extension)
+### 요구사항
+- Visual Studio 2022 (또는 C# 확장이 있는 VS Code)
 - .NET 8.0 SDK
-- Windows development tools
+- Windows 개발 도구
 
-### Build Commands
+### 빌드 명령
 ```bash
-# Debug build
+# 디버그 빌드
 dotnet build
 
-# Release build with optimizations
+# 최적화된 릴리즈 빌드
 dotnet build -c Release
 
-# Run tests (when added)
+# 테스트 실행(추가 시)
 dotnet test
 
-# Publish standalone executable
+# 독립 실행 파일 게시
 dotnet publish -c Release --self-contained -r win-x64 -o ./publish
 ```
 
-### NuGet Dependencies
+### NuGet 종속성
 ```xml
 <PackageReference Include="MdXaml" Version="1.27.0" />
 <PackageReference Include="MdXaml.Plugins" Version="1.27.0" />
 <PackageReference Include="System.Text.Json" Version="8.0.5" />
 ```
 
-## Contributing
+## 기여
 
-Feel free to submit issues and pull requests. For major changes, please open an issue first to discuss proposed changes.
+이슈와 풀 리퀘스트를 자유롭게 제출하세요. 주요 변경 사항의 경우 먼저 제안된 변경 사항을 논의할 이슈를 열어주세요.
 
-## License
+## 라이선스
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+이 프로젝트는 MIT 라이선스에 따라 라이선스가 부여됩니다. 자세한 내용은 [LICENSE](LICENSE) 파일을 참조하세요.
 
 Copyright (c) 2025 seeper0
 
-## Acknowledgments
+## 감사의 말
 
-- [MdXaml](https://github.com/whistyun/MdXaml) - Excellent WPF Markdown rendering library
-- Windows Presentation Foundation (WPF) team for the powerful UI framework
-- .NET community for making .NET 8.0 available
+- [MdXaml](https://github.com/whistyun/MdXaml) - 훌륭한 WPF 마크다운 렌더링 라이브러리
+- Windows Presentation Foundation(WPF) 팀의 강력한 UI 프레임워크
+- .NET 8.0을 제공한 .NET 커뮤니티
 
 ---
 
-**Made with ❤️ for Markdown lovers**
+**마크다운을 사랑하는 분들을 위해 ❤️로 제작**
