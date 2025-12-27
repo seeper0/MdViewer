@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.2] - 2025-12-28
+
+### Added
+- **인스톨러 개선**
+  - 설치 완료 화면에 GitHub 페이지 방문 옵션 추가
+  - 사용자가 선택적으로 프로젝트 페이지 확인 가능
+
 ## [0.2.1] - 2025-12-27
 
 ### Fixed

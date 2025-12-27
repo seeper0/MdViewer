@@ -2,7 +2,7 @@
 ; 한국어 지원 포함
 
 #define MyAppName "MdViewer"
-#define MyAppVersion "0.2.1"
+#define MyAppVersion "0.2.2"
 #define MyAppPublisher "seeper0"
 #define MyAppURL "https://github.com/seeper0/MdViewer"
 #define MyAppExeName "MdViewer.exe"
@@ -52,6 +52,7 @@ Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: de
 
 [Run]
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
+Filename: "https://github.com/seeper0/MdViewer"; Description: "GitHub 페이지 방문"; Flags: postinstall shellexec skipifsilent unchecked
 
 [Registry]
 ; .md 파일 연결은 프로그램 첫 실행시 자동으로 처리됨
