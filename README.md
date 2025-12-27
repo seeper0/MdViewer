@@ -33,6 +33,7 @@
 |--------|------|
 | **Esc** | 창 닫기 |
 | **F5** | 현재 파일 새로고침 |
+| **Ctrl+E** | 현재 파일이 있는 폴더 열기 |
 | **Alt+F4** | 창 닫기 (기본) |
 
 ## 기술 스택
@@ -260,6 +261,59 @@ dotnet publish -c Release --self-contained -r win-x64 -o ./publish
 이 프로젝트는 MIT 라이선스에 따라 라이선스가 부여됩니다. 자세한 내용은 [LICENSE](LICENSE) 파일을 참조하세요.
 
 Copyright (c) 2025 seeper0
+
+## 개발 교훈
+
+### MdXaml 이미지 경로 처리
+**문제**: 상대 경로 이미지가 "resource not found" 오류로 표시되지 않음
+
+**원인**: MdXaml이 상대 경로 이미지를 찾으려면 기준 경로를 알아야 함
+
+**해결책**:
+```csharp
+// ❌ 작동하지 않음
+Directory.SetCurrentDirectory(directory);
+
+// ✅ 올바른 방법
+MarkdownViewer.AssetPathRoot = directory;
+```
+
+`AssetPathRoot` 속성을 마크다운 파일의 디렉터리로 설정하면 MdXaml이 상대 경로를 올바르게 해석합니다.
+
+### 마크다운 이미지 vs 링크 구문
+마크다운에서 이미지와 링크는 다른 용도입니다:
+
+```markdown
+# 이미지 삽입 (표시만 됨, 클릭 불가)
+![설명](image.png)
+
+# 링크 (클릭 가능)
+[이미지 열기](image.png)
+```
+
+- `![]()`는 이미지를 문서에 표시하는 용도 (클릭 불가)
+- `[]()`는 클릭 가능한 링크 (파일을 열거나 다른 페이지로 이동)
+
+### Excel COM Interop 의존성
+**문제**: NuGet의 `Microsoft.Office.Interop.Excel`을 사용하면 런타임에 DLL 의존성 오류 발생
+
+**해결책**: Dynamic COM binding 사용
+```csharp
+// ❌ Static Interop (DLL 의존성 필요)
+Excel.Application excel = new Excel.Application();
+
+// ✅ Dynamic COM (의존성 없음)
+Type? excelType = Type.GetTypeFromProgID("Excel.Application");
+dynamic excelApp = Activator.CreateInstance(excelType);
+```
+
+Dynamic COM을 사용하면 Interop DLL 없이도 Excel을 제어할 수 있습니다.
+
+### 프레임워크 종속 vs 독립 실행형 배포
+- **프레임워크 종속** (`dotnet publish`): ~1MB, .NET Runtime 필요
+- **독립 실행형** (`dotnet publish --self-contained`): ~156MB, Runtime 포함
+
+사용자 편의성(독립 실행형)과 파일 크기(프레임워크 종속) 간의 트레이드오프를 고려해야 합니다.
 
 ## 감사의 말
 

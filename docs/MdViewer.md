@@ -69,7 +69,13 @@
 |----|------|
 | Esc | 창 닫기 |
 | F5 | 현재 파일 새로고침 |
+| Ctrl+E | 현재 파일이 있는 폴더 열기 |
 | Alt+F4 | 창 닫기 (기본 동작) |
+
+### 7. Drag & Drop
+- .md 파일을 창에 드래그하여 열기
+- 드래그 중 파일이 .md인 경우에만 복사 커서 표시
+- 드롭 시 해당 파일 로드
 
 ## 아키텍처
 
@@ -106,10 +112,12 @@ MdViewer/
 #### MainWindow.xaml.cs
 - MdXaml MarkdownScrollViewer 컨트롤 사용
 - 파일 로드 및 렌더링
+- **MdXaml 이미지 경로 설정**: `MarkdownViewer.AssetPathRoot`를 마크다운 파일 디렉터리로 설정하여 상대 경로 이미지 로드
 - 링크 클릭 이벤트 핸들링 (HTTP, 이미지, Office, MD)
 - Excel 시트 이동 기능 (Dynamic COM)
-- 단축키 바인딩
+- 단축키 바인딩 (Esc, F5, Ctrl+E)
 - Drag & Drop 지원 (.md 파일)
+- Ctrl+E로 현재 파일 폴더 열기 (`OpenFolder()` 메서드)
 
 #### FileAssociationService.cs
 - 레지스트리에 .md 확장자 등록
@@ -209,3 +217,141 @@ HKEY_CURRENT_USER\Software\Classes\MdViewer.md\shell\open\command
 - 파일 탐색기 사이드바
 - 인쇄 기능
 - 북마크
+
+## 개발 교훈
+
+### 1. MdXaml 이미지 경로 처리
+**문제**: 상대 경로 이미지(`![](test.png)`)가 "resource not found" 오류로 표시되지 않음
+
+**시도한 방법들**:
+```csharp
+// ❌ 작동하지 않음 - 작업 디렉터리 변경
+Directory.SetCurrentDirectory(directory);
+
+// ❌ 작동하지 않음 - DocumentPath 속성 없음
+MarkdownViewer.DocumentPath = filePath;
+```
+
+**올바른 해결책**:
+```csharp
+// ✅ AssetPathRoot 속성 사용
+var directory = Path.GetDirectoryName(_filePath);
+if (!string.IsNullOrEmpty(directory))
+{
+    MarkdownViewer.AssetPathRoot = directory;
+}
+MarkdownViewer.Markdown = content;
+```
+
+**핵심**: MdXaml은 `AssetPathRoot` 속성을 기준으로 상대 경로를 해석합니다. 이 속성을 마크다운 파일의 디렉터리로 설정하면 같은 폴더의 이미지를 올바르게 로드할 수 있습니다.
+
+### 2. 마크다운 이미지 vs 링크 구문
+개발 중 혼동하기 쉬운 부분:
+
+```markdown
+# 이미지 삽입 구문 (표시만 됨)
+![설명 텍스트](image.png)
+→ 이미지를 문서에 렌더링
+→ 클릭 불가 (이미지 표시가 목적)
+
+# 링크 구문 (클릭 가능)
+[이미지 열기](image.png)
+→ 하이퍼링크로 렌더링
+→ 클릭하면 파일을 열거나 페이지 이동
+```
+
+**결론**:
+- `![]()` = 이미지 삽입 (display)
+- `[]()` = 하이퍼링크 (clickable)
+
+사용자가 "이미지 클릭이 안 된다"고 하면, `![]()` 구문은 클릭이 불가능한 것이 정상입니다.
+
+### 3. Excel COM Interop 의존성 문제
+**문제**: NuGet `Microsoft.Office.Interop.Excel` 사용 시 런타임 오류
+```
+Could not load file or assembly 'office, Version=16.0.0.0'
+```
+
+**원인**: Static Interop은 Interop DLL을 런타임에 요구하며, `EmbedInteropTypes=false`로도 해결 안 됨
+
+**해결책**: Dynamic COM binding 사용
+```csharp
+// ❌ Static Interop (DLL 의존성)
+using Excel = Microsoft.Office.Interop.Excel;
+Excel.Application excel = new Excel.Application();
+
+// ✅ Dynamic COM (의존성 없음)
+Type? excelType = Type.GetTypeFromProgID("Excel.Application");
+if (excelType == null)
+{
+    MessageBox.Show("Excel이 설치되어 있지 않습니다.");
+    return;
+}
+dynamic excelApp = Activator.CreateInstance(excelType);
+excelApp.Visible = true;
+dynamic workbook = excelApp.Workbooks.Open(excelPath);
+```
+
+**장점**:
+- Interop DLL 불필요
+- 패키지 크기 감소
+- 배포 단순화
+
+**단점**:
+- 컴파일 타임 타입 체크 없음
+- IntelliSense 지원 제한
+
+### 4. 프레임워크 종속 vs 독립 실행형 배포
+**비교**:
+| 구분 | 프레임워크 종속 | 독립 실행형 |
+|------|----------------|------------|
+| 크기 | ~1MB | ~156MB |
+| .NET Runtime 필요 | ✅ 필요 | ❌ 불필요 |
+| 빌드 명령 | `dotnet publish` | `dotnet publish --self-contained` |
+| 사용자 편의성 | 낮음 (Runtime 설치) | 높음 (바로 실행) |
+
+**선택 기준**:
+- **일반 사용자**: 독립 실행형 (다운로드 후 바로 실행)
+- **개발자/전문가**: 프레임워크 종속 (작은 크기)
+
+v0.2.0에서는 두 버전 모두 제공하여 사용자가 선택하도록 했습니다.
+
+### 5. WPF Trimming 지원 제한
+**문제**: WPF는 .NET Trimming을 지원하지 않음
+```
+NETSDK1168: 트리밍을 사용하도록 설정하면 WPF가 지원되지 않거나 권장되지 않습니다
+```
+
+**해결**: Trimming 대신 프레임워크 종속 배포로 크기 축소
+- Self-contained (156MB) → Framework-dependent (1MB)
+
+### 6. Excel 하이퍼링크 표준 형식
+**질문**: Excel 시트 이동을 마크다운에서 어떻게 표현할까?
+
+**조사 결과**: Excel 하이퍼링크 표준 형식
+```
+파일경로#시트이름!셀주소
+예: data.xlsx#Sheet2!A1
+예: report.xlsx#'월간 보고서'!B5
+```
+
+**구현**:
+```csharp
+// # 기호로 파일 경로와 시트 정보 분리
+if (uri.Contains('#'))
+{
+    var parts = uri.Split('#', 2);
+    filePath = parts[0];
+    sheetInfo = parts.Length > 1 ? parts[1] : null;
+}
+
+// 시트 정보 파싱: '시트이름!셀주소'
+if (sheetInfo.Contains('!'))
+{
+    var parts = sheetInfo.Split('!', 2);
+    sheetName = parts[0].Trim('\'');
+    cellAddress = parts[1];
+}
+```
+
+**주의**: 시트 이름에 공백/특수문자가 있으면 작은따옴표로 감싸야 함

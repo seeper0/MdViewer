@@ -70,6 +70,14 @@ namespace MdViewer
             try
             {
                 var content = File.ReadAllText(_filePath);
+
+                // MdXaml이 상대 경로 이미지를 찾을 수 있도록 AssetPathRoot 설정
+                var directory = Path.GetDirectoryName(_filePath);
+                if (!string.IsNullOrEmpty(directory))
+                {
+                    MarkdownViewer.AssetPathRoot = directory;
+                }
+
                 MarkdownViewer.Markdown = content;
                 Title = $"{Path.GetFileName(_filePath)} - MdViewer";
 
@@ -242,8 +250,12 @@ namespace MdViewer
                     }
                     catch (Exception ex)
                     {
-                        MessageBox.Show($"이미지를 열 수 없습니다:\n{ex.Message}", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
+                        MessageBox.Show($"이미지를 열 수 없습니다:\n경로: {imagePath}\n오류: {ex.Message}", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
                     }
+                }
+                else
+                {
+                    MessageBox.Show($"이미지 경로를 찾을 수 없습니다:\n원본 URI: {uri}\n파일 경로: {filePath}", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
                 return;
             }
@@ -332,6 +344,14 @@ namespace MdViewer
 
         private void Window_KeyDown(object sender, KeyEventArgs e)
         {
+            // Ctrl+E: 폴더 열기
+            if (e.Key == Key.E && (Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control)
+            {
+                OpenFolder();
+                e.Handled = true;
+                return;
+            }
+
             switch (e.Key)
             {
                 case Key.Escape:
@@ -340,6 +360,28 @@ namespace MdViewer
                 case Key.F5:
                     ReloadFile();
                     break;
+            }
+        }
+
+        private void OpenFolder()
+        {
+            if (string.IsNullOrEmpty(_filePath))
+                return;
+
+            var directory = Path.GetDirectoryName(_filePath);
+            if (string.IsNullOrEmpty(directory) || !Directory.Exists(directory))
+            {
+                MessageBox.Show("폴더를 찾을 수 없습니다.", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            try
+            {
+                Process.Start(new ProcessStartInfo(directory) { UseShellExecute = true });
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"폴더를 열 수 없습니다:\n{ex.Message}", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
