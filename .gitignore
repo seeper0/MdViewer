@@ -423,6 +423,7 @@ FodyWeavers.xsd
 # MdViewer build outputs
 MdViewer.exe
 MdViewer-v*.exe
+MdViewer-v*.zip
 publish/
 publish-*/
 installer-output/
