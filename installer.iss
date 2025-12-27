@@ -2,7 +2,7 @@
 ; 한국어 지원 포함
 
 #define MyAppName "MdViewer"
-#define MyAppVersion "0.2.0"
+#define MyAppVersion "0.2.1"
 #define MyAppPublisher "seeper0"
 #define MyAppURL "https://github.com/seeper0/MdViewer"
 #define MyAppExeName "MdViewer.exe"
