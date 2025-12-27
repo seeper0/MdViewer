@@ -165,13 +165,16 @@ cd publish && tar -a -c -f ../MdViewer-v새버전-portable.zip * && cd ..
 **테스트 체크리스트**:
 1. 인스톨러 UI가 정상적으로 표시되는지 확인
 2. .NET 8 Runtime 체크가 동작하는지 확인
-3. 설치 완료 후 MdViewer 실행 확인
-4. .md 파일 연결 확인:
+3. 설치 완료 화면 옵션 확인:
+   - "MdViewer 실행" 옵션 (기본 체크)
+   - "GitHub 페이지 방문" 옵션 (기본 체크 안 됨)
+4. 설치 완료 후 MdViewer 실행 확인
+5. .md 파일 연결 확인:
    - 탐색기에서 .md 파일 우클릭 → 연결 프로그램 확인
    - .md 파일 더블클릭으로 MdViewer 실행 확인
-5. 설치된 폴더 확인:
+6. 설치된 폴더 확인:
    ```bash
-   ls "C:\Program Files\MdViewer"
+   ls "%LocalAppData%\Programs\MdViewer"
    ```
 
 **테스트 실패 시**:
