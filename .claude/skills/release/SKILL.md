@@ -76,6 +76,10 @@ description: MdViewer 프로젝트의 새 버전을 릴리스합니다. 버전 �
 - 문서 규칙 준수 확인
 - Git 규칙 존재 확인
 
+#### docs/MdViewer.md 검증
+- 명세서 내용이 최신인지
+- 빌드 방법 확인
+
 #### 프로젝트 구조 검증
 ```bash
 # 필수 파일 존재 확인
@@ -84,10 +88,11 @@ description: MdViewer 프로젝트의 새 버전을 릴리스합니다. 버전 �
 - README.md (존재)
 - MdViewer.csproj (존재)
 - installer.iss (존재)
+- docs/MdViewer.md (존재)
 
 # 불필요한 파일 확인
-- RELEASE_NOTES_*.md (없어야 함)
 - nul 파일 (없어야 함)
+- RELEASE_NOTES_*.md (없어야 함)
 ```
 
 ### 5. 변경 사항 보고
@@ -98,9 +103,8 @@ description: MdViewer 프로젝트의 새 버전을 릴리스합니다. 버전 �
 - CHANGELOG 추가 내용
 - 검증 결과 요약
 
-### 6. Git 작업
+### 6. Git 커밋 및 푸시
 
-#### 6.1 커밋
 ```bash
 git add .
 git commit -m "release: prepare v새버전
@@ -112,11 +116,76 @@ git commit -m "release: prepare v새버전
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
 
 Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
+
+git push
 ```
 
-#### 6.2 Git 태그 생성
+**중요**: 태그는 빌드 성공 후에 생성합니다.
 
-사용자에게 Git 태그를 생성할지 물어봅니다:
+### 7. 빌드 및 테스트
+
+#### 7.1 프로젝트 빌드
+```bash
+dotnet publish -c Release -r win-x64 --self-contained false -o ./publish
+```
+
+#### 7.2 빌드 검증
+
+빌드된 파일 확인:
+```bash
+ls ./publish/MdViewer.exe
+```
+
+**빌드 실패 시**:
+- 문제 수정 후 재빌드
+- 태그 생성 안 함
+- 사용자에게 오류 보고
+
+#### 7.3 포터블 zip 생성
+```bash
+cd publish && tar -a -c -f ../MdViewer-v새버전-portable.zip * && cd ..
+```
+
+#### 7.4 인스톨러 생성
+```bash
+"C:\Program Files (x86)\Inno Setup 6\ISCC.exe" installer.iss
+```
+
+출력: `installer-output/MdViewer-v새버전-Setup.exe`
+
+#### 7.5 인스톨러 테스트
+
+**중요**: Setup.exe를 직접 실행하여 설치 테스트를 진행합니다.
+
+```bash
+# 인스톨러 실행 (GUI 설치 진행)
+./installer-output/MdViewer-v새버전-Setup.exe
+```
+
+**테스트 체크리스트**:
+1. 인스톨러 UI가 정상적으로 표시되는지 확인
+2. .NET 8 Runtime 체크가 동작하는지 확인
+3. 설치 완료 후 MdViewer 실행 확인
+4. .md 파일 연결 확인:
+   - 탐색기에서 .md 파일 우클릭 → 연결 프로그램 확인
+   - .md 파일 더블클릭으로 MdViewer 실행 확인
+5. 설치된 폴더 확인:
+   ```bash
+   ls "C:\Program Files\MdViewer"
+   ```
+
+**테스트 실패 시**:
+- 인스톨러 스크립트 수정
+- 재빌드 (`7.1`부터 다시 실행)
+- 태그 생성 안 함
+
+**테스트 완료 후 정리**:
+- 제어판에서 "MdViewer" 제거
+- 또는 다음 릴리스 시 덮어쓰기 설치
+
+### 8. Git 태그 생성 및 푸시
+
+**빌드 성공 확인 후** Git 태그 생성:
 
 ```bash
 git tag -a v새버전 -m "MdViewer v새버전
@@ -126,33 +195,33 @@ git tag -a v새버전 -m "MdViewer v새버전
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
 
 Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
+
+git push --tags
 ```
 
-#### 6.3 푸시
+### 9. GitHub Release 생성
 
 ```bash
-git push
-git push --tags  # 태그 생성한 경우
+gh release create v새버전 \
+  --title "MdViewer v새버전" \
+  --notes "[CHANGELOG 내용]" \
+  MdViewer-v새버전-portable.zip \
+  installer-output/MdViewer-v새버전-Setup.exe
 ```
 
-### 7. 다음 단계 안내
+### 10. 다음 단계 안내
 
-릴리스 완료 후 사용자에게 다음 작업을 안내:
+릴리스 완료 후 사용자에게 확인사항 안내:
 
-1. **빌드 및 인스톨러 생성**
-   ```bash
-   dotnet publish -c Release -o ./publish
-   # Inno Setup으로 installer.iss 컴파일
-   ```
+1. **GitHub Release 확인**
+   - https://github.com/seeper0/MdViewer/releases/tag/v새버전
+   - 파일 업로드 확인 (portable.zip, Setup.exe)
 
-2. **GitHub Release 생성**
-   - https://github.com/seeper0/MdViewer/releases/new
-   - 태그: v새버전
-   - 제목: MdViewer v새버전
-   - 설명: CHANGELOG.md 내용 복사
-   - 파일 첨부: MdViewer-v새버전-Setup.exe
+2. **릴리스 테스트**
+   - 포터블 버전 다운로드 및 실행 테스트
+   - 인스톨러 설치 및 .md 파일 연결 테스트
 
-3. **릴리스 공지**
+3. **릴리스 공지** (선택)
    - README.md 업데이트 (필요시)
    - 사용자 공지 (필요시)
 
@@ -174,6 +243,11 @@ git push --tags  # 태그 생성한 경우
 - 버전 불일치 발견 시 수정 후 재검증
 - 문서 오류 발견 시 사용자에게 알림
 
+### Inno Setup 미설치
+- ISCC.exe를 찾을 수 없는 경우:
+  - 포터블 버전만 먼저 릴리스
+  - 인스톨러는 수동으로 나중에 추가하도록 안내
+
 ## 예시
 
 ### 사용 시나리오 1: 패치 버전 릴리스
@@ -187,8 +261,9 @@ git push --tags  # 태그 생성한 경우
 4. 파일 업데이트
 5. 검증
 6. 커밋 & 푸시
-7. 태그 생성 여부 확인
-8. 다음 단계 안내
+7. 빌드 (portable.zip, Setup.exe)
+8. GitHub Release 생성
+9. 다음 단계 안내
 
 ### 사용 시나리오 2: 마이너 버전 릴리스
 
@@ -206,25 +281,48 @@ git push --tags  # 태그 생성한 경우
 3. **날짜 형식**: YYYY-MM-DD (예: 2025-12-27)
 4. **커밋 메시지**: "release: prepare v버전" 형식 사용
 5. **태그 메시지**: CHANGELOG 내용 포함
-6. **Pre-commit hook**: nul 파일 자동 검증됨
+6. **nul 파일 검증**: Git 커밋 전 자동 검증
 
 ## 필수 도구
 
 - Git (커밋, 태그, 푸시)
-- .NET 8.0 SDK (빌드용, Skill에서는 직접 사용 안 함)
-- Inno Setup (인스톨러 생성용, 사용자가 수동 실행)
+- GitHub CLI (`gh`) - Release 생성용
+- .NET 8.0 SDK (빌드용)
+- Inno Setup (인스톨러 생성용, 선택)
+- tar (zip 생성용, Windows 10+ 내장)
 
 ## 체크리스트
 
 릴리스 전 확인사항:
-- [ ] 모든 테스트 통과
-- [ ] 문서 업데이트 완료
+- [ ] 모든 코드 변경 완료
+- [ ] 문서 업데이트 완료 (README.md, docs/MdViewer.md)
 - [ ] Breaking changes 확인
 - [ ] 버전 번호 결정 (Semantic Versioning)
 - [ ] CHANGELOG 작성 준비
 
 릴리스 후 확인사항:
-- [ ] GitHub Release 생성
-- [ ] 인스톨러 업로드
-- [ ] 릴리스 공지
-- [ ] 이슈/PR 정리
+- [ ] GitHub Release 생성 확인
+- [ ] portable.zip 다운로드 테스트
+- [ ] Setup.exe 설치 테스트
+- [ ] .md 파일 연결 동작 확인
+
+## MdViewer 특화 기능
+
+### WPF 애플리케이션
+- 콘솔 앱과 달리 GUI로 실행되므로 빌드 테스트가 제한적
+- 인스톨러 테스트에서 실제 실행 확인 필요
+
+### 설치 위치 및 권한
+- **설치 위치**: `%LocalAppData%\Programs\MdViewer`
+- **권한**: `PrivilegesRequired=lowest` (관리자 권한 불필요)
+- **이유**: PATH 등록 불필요, 사용자별 설치로 충분
+- **참고**: NoljiMa는 Program Files (admin 권한, PATH 등록 필요)
+
+### .md 파일 연결
+- 첫 실행 시 자동 등록 (HKEY_CURRENT_USER)
+- 인스톨러 설치 시 즉시 동작 확인 가능
+- 파일 연결 레지스트리 경로 검증 기능 포함
+
+### 멀티 파일 구조
+- Services/, Models/ 등 디렉터리 구조
+- 단일 파일 프로젝트와 달리 여러 파일 관리 필요

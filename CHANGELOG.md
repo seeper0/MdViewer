@@ -9,9 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - **파일 연결 경로 검증 개선**
-  - .md 파일 연결 시 실행 파일 경로가 일치하는지 확인
+  - .md 파일 확장자 연결 시 실행 파일 경로가 일치하는지 확인
   - 다른 위치에서 실행 시 자동으로 재등록
-  - AppData\Local\Programs 등록 문제 해결
+  - 파일 연결 레지스트리 경로 불일치 문제 해결
 
 - **인스톨러 DLL 포함**
   - 설치 파일에 필수 DLL 누락 문제 해결
