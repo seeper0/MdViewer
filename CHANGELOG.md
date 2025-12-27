@@ -8,9 +8,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.2.2] - 2025-12-28
 
 ### Added
+- **About 대화상자 추가**
+  - F1 단축키로 About 실행
+  - 시스템 메뉴(Alt+Space)에 "MdViewer 정보(&A)" 추가
+  - 버전 정보 및 클릭 가능한 Home URL 표시
+  - ESC 키로 About 창만 닫기
+
 - **인스톨러 개선**
-  - 설치 완료 화면에 GitHub 페이지 방문 옵션 추가
-  - 사용자가 선택적으로 프로젝트 페이지 확인 가능
+  - README.md를 설치 폴더에 포함
+  - 시작 메뉴에 바로가기 추가 (README, MdViewer 페이지, 제거)
+  - 설치 완료 화면에 "MdViewer 페이지 방문" 옵션 추가
+  - 바탕화면 바로가기 옵션 제거
 
 ## [0.2.1] - 2025-12-27
 
