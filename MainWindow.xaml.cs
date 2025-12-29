@@ -559,7 +559,7 @@ namespace MdViewer
             {
                 Title = "MdViewer 정보",
                 Width = 400,
-                Height = 280,
+                Height = 380,
                 WindowStartupLocation = WindowStartupLocation.CenterOwner,
                 Owner = this,
                 ResizeMode = ResizeMode.NoResize,
@@ -623,6 +623,26 @@ namespace MdViewer
             };
             linkText.Inlines.Add(hyperlink);
             stackPanel.Children.Add(linkText);
+
+            // HotKey List
+            stackPanel.Children.Add(new System.Windows.Controls.TextBlock
+            {
+                Text = "HotKey List",
+                FontSize = 14,
+                FontWeight = FontWeights.Bold,
+                Margin = new Thickness(0, 0, 0, 5)
+            });
+
+            var hotkeyList = new System.Windows.Controls.TextBlock
+            {
+                FontSize = 12,
+                Margin = new Thickness(10, 0, 0, 20)
+            };
+            hotkeyList.Inlines.Add(new System.Windows.Documents.Run("F1: 정보 보기\n"));
+            hotkeyList.Inlines.Add(new System.Windows.Documents.Run("F5: 새로고침\n"));
+            hotkeyList.Inlines.Add(new System.Windows.Documents.Run("Ctrl+E: 폴더 열기\n"));
+            hotkeyList.Inlines.Add(new System.Windows.Documents.Run("ESC: 닫기"));
+            stackPanel.Children.Add(hotkeyList);
 
             // Copyright
             stackPanel.Children.Add(new System.Windows.Controls.TextBlock
