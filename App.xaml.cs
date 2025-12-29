@@ -43,18 +43,8 @@ namespace MdViewer
             }
             else
             {
-                // 기본으로 실행 파일 위치의 README.md 열기
-                var exeDir = AppDomain.CurrentDomain.BaseDirectory;
-                var defaultFile = System.IO.Path.Combine(exeDir, "README.md");
-                if (System.IO.File.Exists(defaultFile))
-                {
-                    WindowManager.OpenFile(defaultFile);
-                }
-                else
-                {
-                    var window = new MainWindow();
-                    window.Show();
-                }
+                var window = new MainWindow();
+                window.Show();
             }
         }
 
